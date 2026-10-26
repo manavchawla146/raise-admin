@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>RAIZE Admin</title>
+    <style>
+        :root {
+            --bg: #0c0b0a;
+            --pn: #16140f;
+            --ln: rgba(200, 160, 106, .28);
+            --g: #c8a06a;
+            --tx: #ece6da;
+            --mu: #9b9486;
+            --rd: #d9776a;
+            color-scheme: dark
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--tx);
+            font: 15px/1.5 Georgia, "Noto Serif", serif
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--bg);
+            border-bottom: 1px solid var(--ln);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px
+        }
+
+        header h1 {
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--g);
+            margin-right: auto
+        }
+
+        #st {
+            font-size: 13px;
+            color: var(--mu)
+        }
+
+        #st.err {
+            color: var(--rd)
+        }
+
+        #st.ok {
+            color: #8fc59a
+        }
+
+        main {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 20px
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+            color: var(--tx);
+            background: #0f0d0a;
+            border: 1px solid var(--ln);
+            border-radius: 3px;
+            padding: 8px 10px
+        }
+
+        button {
+            cursor: pointer;
+            background: none
+        }
+
+        button:hover {
+            border-color: var(--g);
+            color: var(--g)
+        }
+
+        button.pri {
+            background: var(--g);
+            color: #000;
+            border-color: var(--g);
+            font-weight: 600
+        }
+
+        button.pri:hover {
+            color: #000;
+            opacity: .9
+        }
+
+        button.x:hover {
+            border-color: var(--rd);
+            color: var(--rd)
+        }
+
+        input:focus,
+        button:focus-visible,
+        textarea:focus {
+            outline: 2px solid var(--g);
+            outline-offset: 1px
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--ln)
+        }
+
+        .tabs button {
+            border: 0;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            padding: 10px 14px;
+            color: var(--mu)
+        }
+
+        .tabs button.on {
+            color: var(--g);
+            border-color: var(--g)
+        }
+
+        .card {
+            background: var(--pn);
+            border: 1px solid var(--ln);
+            padding: 16px;
+            margin-bottom: 16px
+        }
+
+        .bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 12px
+        }
+
+        .bar input {
+            flex: 1;
+            min-width: 140px
+        }
+
+        .it {
+            display: grid;
+            grid-template-columns: 1fr 110px 34px auto;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center
+        }
+
+        .it.off input[data-p$=name] {
+            opacity: .45;
+            text-decoration: line-through
+        }
+
+        .sm {
+            padding: 6px 9px;
+            font-size: 13px
+        }
+
+        label.f {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--mu);
+            font-size: 13px
+        }
+
+        label.f input,
+        label.f textarea {
+            display: block;
+            width: 100%;
+            margin-top: 4px;
+            color: var(--tx)
+        }
+
+        .hint {
+            color: var(--mu);
+            font-size: 13px;
+            margin: 6px 0 12px
+        }
+
+        #cn {
+            max-width: 520px;
+            margin: 8vh auto
+        }
+
+        .tm {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px
+        }
+
+        @media(max-width:560px) {
+            .it {
+                grid-template-columns: 1fr 90px 30px
+            }
+
+            .it .mv {
+                grid-column: 1/-1
+            }
+        }
+    </style>
+    <script src="supabase-config.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>RAIZE · Admin</h1><span id="st"></span>
+        <button id="rl" class="sm">Reload</button><button id="sv" class="pri">Save &amp; publish</button>
+    </header>
+    <div id="auth" class="card" style="max-width:980px;margin:16px auto 0">
+        <label class="f">Admin email<input id="ae" type="email" autocomplete="username"></label>
+        <label class="f">Password<input id="ap" type="password" autocomplete="current-password"></label>
+        <button id="li" class="pri">Sign in</button>
+    </div>
+    <main id="m"></main>
+    <script>
+        var cfg = window.RAIZE_SUPABASE_CONFIG || {}, SB_URL = cfg.url || '', SB_KEY = cfg.publishableKey || '';
+        var SEED = {
+            Men: [['Grooming', [['Hair Cut', 500], ['Beard', 300], ['Clean Shave', 200], ['Head Shave', 500], ['Hair Wash', 200], ['Hair Styling', 100], ['Head Massage', 500]]],
+            ['Hair Treatment', [['Hair Spa', 1000], ['Premium Spa', 1500], ['Botox', 2500], ['Keratin', 2000], ['Nanoplastia', 2500], ['Scalp Detox', 1200], ['Anti Dandruff', 1200], ['Hair Fall Control', 1200]]],
+            ['Hair Colour', [['Global Hair Colour', 1000], ['Highlights', 2500], ['Bleach', 3000]]]],
+            Women: [['Grooming', [['Hair Cut', 700], ['Hair Trimming', 400], ['Hair Wash', 300], ['Blowdry', 200], ['Premium Wash & Blowdry', 600], ['Tongs', 700], ['Ironing', 700]], 'Prices vary with hair length.'],
+            ['Hair Treatment', [['Hair Spa', 1500], ['Premium Spa', 2500], ['Botox', 5000], ['Keratin', 4000], ['Nanoplastia', 5000], ['Scalp Detox', 1000], ['Anti Dandruff', 1500], ['Hair Fall Control', 1500]], 'According to hair length.'],
+            ['Hair Colour', [['Root Touchup', 1200], ['Global Hair Colour', 3500], ['Highlights', 4500], ['Partial Highlights', 2500], ['Ombre', 4500], ['Balayage', 4500], ['Bleach', 2000]], 'According to hair length.']],
+            Beauty: [['Facials', [['Express Facial', 1500], ['Premium Facial', 2500], ['Hydra Facial', 5000], ['Clean Up', 1000], ['D-Tan', 750]]],
+            ['Threading', [['Eyebrow', 100], ['Upper Lips', 50], ['Forehead', 50], ['Chin', 50], ['Full Face', 300]]],
+            ['Face Waxing', [['Eyebrow', 200], ['Upper Lips', 100], ['Forehead', 100], ['Chin', 100], ['Full Face', 600]]],
+            ['Cream Waxing', [['Hand & Underarms', 450], ['Half Leg', 450], ['Full Leg', 800], ['Back', 1000], ['Stomach', 800], ['Full Body', 3000]]],
+            ['Rica Waxing', [['Hand & Underarms', 750], ['Half Leg', 750], ['Full Leg', 1200], ['Back', 1000], ['Stomach', 1200], ['Full Body', 4000], ['Brazilian Waxing', 3000]]],
+            ['Manicure & Pedicure', [['Express Manicure', 1500], ['Premium Manicure', 2500], ['Express Pedicure', 1600], ['Premium Pedicure', 2600]]],
+            ['Nails', [['Gel Polish', 600], ['Semi-Permanent Extension', 1600], ['Gel-X Extension', 1700], ['Gel Extension', 2000], ['Acrylic Extension', 2000], ['Removing', 500]], 'Nail art is chargeable.'],
+            ['Lashes', [['Classic Extension', 3500], ['2D/3D/4D Extension', 4000], ['Hybrid Extension', 4000], ['Mega Volume Extension', 5000]]]]
+        };
+        var DEF = {
+            services: [], team: [
+                { name: 'Aakash Limbachiya', role: 'Founder', handle: '@akash_the_hair_influencer', url: 'https://www.instagram.com/akash_the_hair_influencer', photo: 'akash.PNG' },
+                { name: 'Ankur Nai', role: 'Co-Founder', handle: '@raizewithankur', url: 'https://instagram.com/raizewithankur', photo: 'ankur.PNG' },
+                { name: 'Tejas Gondaliya', role: 'Creative & Operations Lead', handle: '@tejasgondaliya001', url: 'https://www.instagram.com/tejasgondaliya001', photo: 'tejas.jpeg' }],
+            settings: { whatsapp: '919638565746', phone: '+91 96385 65746', email: 'raizethesalon@gmail.com', address: 'Indraprasth Saptak, 132 Feet Ring Rd, nr. AEC Flyover, AEC Char Rasta, Naranpura, Ahmedabad, Gujarat 380013', hours: 'Open every day, 10:30 AM to 9:30 PM' }
+        };
+        DEF.services = Object.keys(SEED).map(function (k) { return { name: k, groups: SEED[k].map(function (g) { return { title: g[0], note: g[2] || '', items: g[1].map(function (x) { return { name: x[0], price: x[1], on: true } }) } }) } });
+        var tok = '', data = null, tab = 's', ci = 0, dirty = false, $ = function (i) { return document.getElementById(i) };
+        var E = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] }) };
+        function st(t, c) { $('st').textContent = t; $('st').className = c || '' }
+        function get(p) { return p.split('.').reduce(function (o, k) { return o[k] }, data) }
+        function put(p, v) { var a = p.split('.'), l = a.pop(); get(a.join('.'))[l] = v }
+        var TPL = { g: function () { return { title: 'New title', note: '', items: [] } }, i: function () { return { name: 'New service', price: 0, on: true } }, c: function () { return { name: 'New category', groups: [] } }, t: function () { return { name: '', role: '', handle: '', url: '', photo: '' } } };
+        function inp(p, v, ph, cls) { return '<input data-p="' + p + '" value="' + E(v) + '" placeholder="' + (ph || '') + '" ' + (cls || '') + '>' }
+        function mv(p, n) { return '<span class="mv"><button class="sm" data-a="up" data-p="' + p + '" title="Move up">↑</button> <button class="sm" data-a="dn" data-p="' + p + '" title="Move down">↓</button> <button class="sm x" data-a="del" data-p="' + p + '" title="Delete">✕</button></span>' }
+        function view() {
+            var h = '<div class="tabs">' + [['s', 'Services'], ['t', 'Team'], ['c', 'Contact info']].map(function (t) { return '<button data-tab="' + t[0] + '" class="' + (tab == t[0] ? 'on' : '') + '">' + t[1] + '</button>' }).join('') + '</div>';
+            if (tab == 's') {
+                if (ci >= data.services.length) ci = Math.max(0, data.services.length - 1);
+                h += '<div class="tabs">' + data.services.map(function (c, i) { return '<button data-cat="' + i + '" class="' + (i == ci ? 'on' : '') + '">' + E(c.name) + '</button>' }).join('') + '<button data-a="add" data-p="services" data-t="c">+ Category</button></div>';
+                var c = data.services[ci];
+                if (c) {
+                    var cp = 'services.' + ci;
+                    h += '<div class="bar">' + inp(cp + '.name', c.name, 'Category (Men, Women, Kids…)') + mv(cp) + '</div>';
+                    c.groups.forEach(function (g, gi) {
+                        var gp = cp + '.groups.' + gi;
+                        h += '<div class="card"><div class="bar">' + inp(gp + '.title', g.title, 'Title (Hair, Waxing…)') + mv(gp) + '</div>';
+                        g.items.forEach(function (x, xi) {
+                            var xp = gp + '.items.' + xi;
+                            h += '<div class="it' + (x.on === false ? ' off' : '') + '">' + inp(xp + '.name', x.name, 'Service name') + '<input data-p="' + xp + '.price" data-n="1" type="number" min="0" value="' + E(x.price) + '" aria-label="Price in rupees"><input data-p="' + xp + '.on" data-b="1" type="checkbox" ' + (x.on !== false ? 'checked' : '') + ' title="Show on site">' + mv(xp) + '</div>'
+                        });
+                        h += '<button class="sm" data-a="add" data-p="' + gp + '.items" data-t="i">+ Add service</button>';
+                        h += '<label class="f" style="margin-top:12px">Note shown under this list (optional)' + inp(gp + '.note', g.note, 'e.g. Prices vary with hair length.') + '</label></div>'
+                    });
+                    h += '<button data-a="add" data-p="' + cp + '.groups" data-t="g">+ Add title</button>';
+                } else h += '<p class="hint">No categories yet. Add one to begin.</p>';
+                h += '<p class="hint">Price is in ₹. Untick the box to hide a service without deleting it.</p>';
+            }
+            if (tab == 't') { h += '<div class="tm">' + data.team.map(function (m, i) { var p = 'team.' + i; return '<div class="card">' + [['name', 'Name'], ['role', 'Role'], ['handle', 'Instagram handle'], ['url', 'Instagram link'], ['photo', 'Photo URL or file name']].map(function (f) { return '<label class="f">' + f[1] + inp(p + '.' + f[0], m[f[0]]) + '</label>' }).join('') + mv(p) + '</div>' }).join('') + '</div><button data-a="add" data-p="team" data-t="t">+ Add team member</button>' }
+            if (tab == 'c') { var s = data.settings; h += '<div class="card">' + [['whatsapp', 'WhatsApp number (country code, digits only)'], ['phone', 'Phone number shown on site'], ['email', 'Email'], ['address', 'Address'], ['hours', 'Opening hours line']].map(function (f) { return '<label class="f">' + f[1] + inp('settings.' + f[0], s[f[0]]) + '</label>' }).join('') + '</div>' }
+            $('m').innerHTML = h
+        }
+        $('m').addEventListener('input', function (e) { var t = e.target, p = t.dataset.p; if (!p) return; var v = t.dataset.b ? t.checked : t.dataset.n ? (+t.value || 0) : t.value; put(p, v); dirty = true; st('Unsaved changes'); if (t.dataset.b) view() });
+        $('m').addEventListener('click', function (e) {
+            var b = e.target.closest('button'); if (!b) return;
+            if (b.dataset.tab) { tab = b.dataset.tab; return view() }
+            if (b.dataset.cat) { ci = +b.dataset.cat; return view() }
+            var a = b.dataset.a, p = b.dataset.p; if (!a) return;
+            if (a == 'add') { var l = get(p); l.push(TPL[b.dataset.t]()); if (p == 'services') ci = l.length - 1 }
+            else {
+                var q = p.split('.'), i = +q.pop(), l = get(q.join('.'));
+                if (a == 'del') { if (!confirm('Delete this?')) return; l.splice(i, 1) }
+                else { var j = i + (a == 'up' ? -1 : 1); if (j < 0 || j >= l.length) return; l.splice(j, 0, l.splice(i, 1)[0]); if (q.join('.') == 'services') ci = j }
+            }
+            dirty = true; st('Unsaved changes'); view()
+        });
+        function ready() { if (!SB_URL || !SB_KEY) { data = data || JSON.parse(JSON.stringify(DEF)); st('Supabase public config is missing. Check supabase-config.js.', 'err'); view(); return false } return true }
+        function login() {
+            var email = $('ae').value.trim(), password = $('ap').value; if (!email || !password) return Promise.reject('Enter your admin email and password.');
+            return fetch(SB_URL + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, password: password }) }).then(function (r) { if (!r.ok) throw 'Sign-in failed — check the email and password.'; return r.json() }).then(function (j) { tok = j.access_token; $('ap').value = ''; st('Signed in', 'ok') })
+        }
+        function load() {
+            if (!ready()) return; st('Loading…');
+            fetch(SB_URL + '/rest/v1/site_data?id=eq.main&select=data', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }).then(function (r) { if (!r.ok) throw 0; return r.json() }).then(function (a) {
+                var d = (a[0] && a[0].data) || {}, empty = !d.services || !d.services.length;
+                data = { services: empty ? DEF.services : d.services, team: d.team || DEF.team, settings: Object.assign({}, DEF.settings, d.settings) };
+                dirty = empty; st(empty ? 'Database is empty — showing your current site. Press Save & publish to go live.' : 'Loaded', empty ? '' : 'ok'); view()
+            }).catch(function () { data = data || JSON.parse(JSON.stringify(DEF)); st('Could not load. Check SUPABASE_URL / key and that supabase.sql was run.', 'err'); view() })
+        }
+        function saveError(r) {
+            return r.text().then(function (text) {
+                var detail = text;
+                try {
+                    var body = JSON.parse(text);
+                    detail = body.message || body.msg || body.error_description || body.error || text;
+                } catch (e) { }
+                detail = String(detail || 'No details returned').slice(0, 400);
+                if (r.status == 401) {
+                    tok = '';
+                    return 'Supabase rejected the session (401): ' + detail + ' Sign in again.';
+                }
+                if (r.status == 403) return 'Supabase denied the write (403): ' + detail + ' Check the site_data RLS policy and table permissions.';
+                return 'Save failed (' + r.status + '): ' + detail;
+            });
+        }
+        function save() {
+            if (!ready()) return; if (!tok) { st('Sign in before publishing.', 'err'); return } st('Saving…');
+            fetch(SB_URL + '/rest/v1/site_data', { method: 'POST', headers: { apikey: SB_KEY, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id: 'main', data: data, updated_at: new Date().toISOString() }) }).then(function (r) {
+                if (!r.ok) return saveError(r).then(function (message) { throw message });
+                dirty = false; st('Published ✓ — site updated', 'ok');
+            }).catch(function (e) { st(typeof e == 'string' ? e : 'Could not save changes.', 'err') })
+        }
+        $('li').onclick = function () { if (!ready()) return; st('Signing in…'); login().catch(function (e) { tok = ''; st(typeof e == 'string' ? e : 'Sign-in failed.', 'err') }) };
+        $('sv').onclick = save; $('rl').onclick = function () { if (!dirty || confirm('Discard unsaved changes?')) load() };
+        addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = '' } });
+        load();
+    </script>
+</body>
+
+</html>
